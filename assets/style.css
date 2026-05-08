@@ -1,0 +1,179 @@
+/* =====================================================
+   SFCM DASHBOARD — Neobrutalism Theme
+   assets/style.css  (auto-loaded by Dash)
+   ===================================================== */
+
+/* ── Google Fonts fallback ── */
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@700;900&display=swap');
+
+/* ── Reset & Base ── */
+*, *::before, *::after { box-sizing: border-box; }
+
+body {
+  background: #F5F0E8;
+  font-family: 'DM Mono', 'JetBrains Mono', 'Courier New', monospace;
+  color: #0D0D0D;
+  margin: 0;
+  padding: 0;
+}
+
+/* ── Run button press animation ── */
+.neo-run-btn:hover {
+  transform: translate(-2px, -2px) !important;
+  box-shadow: 8px 8px 0 #0D0D0D !important;
+}
+.neo-run-btn:active {
+  transform: translate(4px, 4px) !important;
+  box-shadow: 2px 2px 0 #0D0D0D !important;
+}
+
+/* ── Bootstrap override: remove card radius ── */
+.card { border-radius: 0 !important; }
+
+/* ── Dash number input ── */
+input[type="number"] {
+  border: 3px solid #0D0D0D !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  outline: none;
+  font-family: 'DM Mono', monospace !important;
+  font-weight: 600;
+  color: #0D0D0D;
+  background: #FFFFFF;
+  padding: 6px 10px;
+  transition: border-color 0.12s, box-shadow 0.12s;
+}
+input[type="number"]:focus {
+  border-color: #0044FF !important;
+  box-shadow: 3px 3px 0 #0044FF !important;
+}
+/* Hide browser spinners */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+input[type="number"] { -moz-appearance: textfield; }
+
+/* ── Upload zone hover ── */
+.dcc-upload:hover,
+div[data-dash-is-loading="true"] + div {
+  background: rgba(255, 229, 0, 0.12) !important;
+}
+
+/* ── Dropdown (Select2 / Dash) ── */
+.Select-control {
+  border: 3px solid #0D0D0D !important;
+  border-radius: 0 !important;
+  background: white !important;
+  box-shadow: none !important;
+  font-family: 'DM Mono', monospace !important;
+  font-size: 12px !important;
+}
+.Select-control:hover  { border-color: #0044FF !important; }
+.Select.is-focused > .Select-control { border-color: #0044FF !important; box-shadow: 3px 3px 0 #0044FF !important; }
+.Select-menu-outer {
+  border: 3px solid #0D0D0D !important;
+  border-radius: 0 !important;
+  box-shadow: 4px 4px 0 #0D0D0D !important;
+  font-family: 'DM Mono', monospace !important;
+  font-size: 12px !important;
+}
+.Select-option.is-focused { background: #FFE500 !important; color: #0D0D0D !important; }
+.Select-option.is-selected { background: #0044FF !important; color: white !important; }
+.Select-value-label { font-family: 'DM Mono', monospace !important; font-weight: 600 !important; }
+.VirtualizedSelectOption { font-family: 'DM Mono', monospace !important; }
+
+/* Dash 2.x Select style */
+.dash-dropdown .Select-control { border: 3px solid #0D0D0D !important; border-radius: 0 !important; }
+
+/* ── DataTable ── */
+.dash-spreadsheet-container {
+  border: 3px solid #0D0D0D !important;
+  border-radius: 0 !important;
+  font-family: 'DM Mono', monospace !important;
+}
+.dash-spreadsheet-container th,
+.dash-spreadsheet-container .dash-header {
+  background: #0D0D0D !important;
+  color: #FFFFFF !important;
+  font-family: 'DM Mono', monospace !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.05em !important;
+  border: 1px solid #333 !important;
+  text-transform: uppercase !important;
+  font-size: 10px !important;
+}
+.dash-spreadsheet-container td {
+  font-family: 'DM Mono', monospace !important;
+  font-size: 11px !important;
+  border: 1px solid #E2DDD4 !important;
+}
+.dash-spreadsheet-container .dash-cell:hover {
+  background: rgba(0, 68, 255, 0.05) !important;
+}
+/* Filter row */
+.dash-spreadsheet-container input.dash-filter {
+  border: 2px solid #0D0D0D !important;
+  border-radius: 0 !important;
+  font-family: 'DM Mono', monospace !important;
+  font-size: 11px !important;
+  background: #FAFAF5 !important;
+}
+
+/* Pagination */
+.previous-next-container button,
+.page-number {
+  border: 2px solid #0D0D0D !important;
+  border-radius: 0 !important;
+  font-family: 'DM Mono', monospace !important;
+  font-weight: 700 !important;
+  background: white !important;
+  box-shadow: 2px 2px 0 #0D0D0D !important;
+}
+.previous-next-container button:hover,
+.page-number:hover {
+  background: #FFE500 !important;
+  transform: translate(-1px, -1px);
+  box-shadow: 3px 3px 0 #0D0D0D !important;
+}
+
+/* ── Plotly chart: remove default border inside Graph ── */
+.js-plotly-plot .plotly .main-svg {
+  border: none !important;
+}
+
+/* ── Map container focus ring ── */
+.js-plotly-plot:focus-within {
+  outline: 3px solid #0044FF;
+  outline-offset: 2px;
+}
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: #F5F0E8; border: 1px solid #C8C2B8; }
+::-webkit-scrollbar-thumb { background: #0D0D0D; }
+::-webkit-scrollbar-thumb:hover { background: #0044FF; }
+
+/* ── Loading spinner text ── */
+._dash-loading-callback {
+  font-family: 'DM Mono', monospace !important;
+  color: #FF3500 !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.12em !important;
+}
+
+/* ── Tooltip / Hover ── */
+.hoverlayer .hovertext {
+  font-family: 'DM Mono', monospace !important;
+  font-size: 11px !important;
+}
+
+/* ── Animations ── */
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+  body { font-size: 12px; }
+  .neo-run-btn { font-size: 11px !important; }
+}
