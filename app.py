@@ -33,7 +33,7 @@ import callbacks  # noqa: F401, E402
 if __name__ == "__main__":
     app.run(
         debug=True,
-        host="0.0.0.0",
+        host="localhost",
         port=8050,
         dev_tools_hot_reload=True,
     )

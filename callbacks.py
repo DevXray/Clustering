@@ -1,12 +1,17 @@
 """
 callbacks.py — All Dash callbacks (uses `from dash import callback` — no circular import)
+Changes:
+  - clientside_callback for dark mode toggle (zero server round-trip)
+  - _metrics_row: className="neo-metric-card" added, background removed from inline style
+  - _cluster_cards: className="neo-cluster-card" added, background removed from inline style
 """
 import json
 import io
 
 import numpy as np
 import pandas as pd
-from dash import callback, Input, Output, State, no_update, ctx
+from dash import callback, clientside_callback, Input, Output, State, no_update, ctx
+from sklearn.preprocessing import MinMaxScaler
 import dash_bootstrap_components as dbc
 from dash import html, dcc
 from dash import dash_table
@@ -17,6 +22,26 @@ from charts import (
     make_bar_fig, make_heatmap_fig, make_map_fig, make_province_bar,
 )
 from constants import NEO, CLUSTER_COLORS, FEAT_SHORT
+
+
+# ─────────────────────────────────────────────────────────────
+# CLIENTSIDE CALLBACK — Dark Mode Toggle
+# Zero server round-trip: toggles `dark-mode` class on <body>
+# and flips the button label between 🌙 DARK and ☀ LIGHT.
+# ─────────────────────────────────────────────────────────────
+clientside_callback(
+    """
+    function(n) {
+        if (!n || n === 0) return window.dash_clientside.no_update;
+        const isDark = n % 2 === 1;
+        document.body.classList.toggle('dark-mode', isDark);
+        return isDark ? '☀  LIGHT' : '🌙  DARK';
+    }
+    """,
+    Output("btn-theme", "children"),
+    Input("btn-theme", "n_clicks"),
+    prevent_initial_call=True,
+)
 
 
 # ─────────────────────────────────────────────────────────────
@@ -39,6 +64,7 @@ def _cluster_cards(results: dict):
 
         cols.append(dbc.Col(
             html.Div([
+                # Colour strip header
                 html.Div(f"CLUSTER {i+1}", style={
                     "fontFamily": "DM Mono, monospace",
                     "fontSize": "9px", "fontWeight": "700",
@@ -47,6 +73,7 @@ def _cluster_cards(results: dict):
                     "padding": "4px 10px",
                     "borderBottom": f"2px solid {NEO['border']}",
                 }),
+                # Body
                 html.Div([
                     html.Div(cat, style={
                         "fontSize": "12px", "fontWeight": "700",
@@ -71,11 +98,12 @@ def _cluster_cards(results: dict):
                         "paddingTop": "6px",
                     }),
                 ], style={"padding": "0 14px 14px"}),
-            ], style={
+            ],
+            # ↓ background intentionally absent — handled by .neo-cluster-card CSS
+            className="neo-cluster-card",
+            style={
                 "border": f"3px solid {NEO['border']}",
                 "boxShadow": NEO["shadow_sm"],
-                "background": "white",
-                "overflow": "hidden",
             }),
             width=12 // n_cl if n_cl <= 4 else 4,
         ))
@@ -110,8 +138,10 @@ def _metrics_row(results: dict):
                     "letterSpacing": "0.14em", "textTransform": "uppercase",
                     "color": NEO["muted"], "marginTop": "5px",
                 }),
-            ], style={
-                "background": "white",
+            ],
+            # ↓ background intentionally absent — handled by .neo-metric-card CSS
+            className="neo-metric-card",
+            style={
                 "border": f"3px solid {NEO['border']}",
                 "boxShadow": "3px 3px 0 #0D0D0D",
                 "padding": "14px 18px",
@@ -169,16 +199,20 @@ def update_file_badge(filename):
 def run_sfcm(n_clicks, contents, filename,
              ra, rb, accept_r, reject_r, m, max_iter, eps):
     if not contents:
-        alert = html.Div("⚠ Belum ada file CSV yang diupload.",
-                         style={"fontFamily": "DM Mono, monospace",
-                                "background": NEO["yellow"],
-                                "border": f"3px solid {NEO['border']}",
-                                "padding": "10px 16px", "fontWeight": "700",
-                                "marginBottom": "12px"})
+        alert = html.Div(
+            "⚠ Belum ada file CSV yang diupload.",
+            style={
+                "fontFamily": "DM Mono, monospace",
+                "background": NEO["yellow"],
+                "border": f"3px solid {NEO['border']}",
+                "padding": "10px 16px", "fontWeight": "700",
+                "marginBottom": "12px",
+            },
+        )
         return no_update, no_update, alert
 
     try:
-        # Guard against None inputs
+        # Guard against None inputs (sliders always have a value, but be safe)
         ra       = float(ra       or 0.45)
         rb       = float(rb       or 1.50)
         accept_r = float(accept_r or 0.50)
@@ -187,7 +221,7 @@ def run_sfcm(n_clicks, contents, filename,
         max_iter = int(  max_iter or 100)
         eps      = float(eps      or 1e-5)
 
-        df            = parse_upload(contents, filename)
+        df                       = parse_upload(contents, filename)
         df_clean, X, scaler, avail_cols = preprocess(df)
 
         results = run_pipeline(
@@ -196,7 +230,6 @@ def run_sfcm(n_clicks, contents, filename,
             m=m, max_iter=max_iter, eps=eps,
         )
 
-        # Separate the df_json for the store-df
         df_json = results.pop("df_json")
         return results, df_json, ""
 
@@ -276,16 +309,24 @@ def update_charts(results, df_json):
     centers    = results["final_centers"]
     avail_cols = results["avail_cols"]
 
-    df      = pd.DataFrame(json.loads(df_json))
-    labels  = (df["_Cluster"] - 1).values
-    X_cols  = [c for c in avail_cols if c in df.columns]
-    X       = df[X_cols].values.astype(float) if X_cols else np.zeros((len(df), 1))
+    df     = pd.DataFrame(json.loads(df_json))
+    labels = (df["_Cluster"] - 1).values
+    X_cols = [c for c in avail_cols if c in df.columns]
 
-    fig_conv  = make_convergence_fig(obj)
-    fig_pca   = make_pca_fig(X, labels, centers, label_map)
-    fig_pie   = make_pie_fig(labels, label_map, n_cl)
-    fig_bar   = make_bar_fig(centers, label_map)
-    fig_heat  = make_heatmap_fig(centers, avail_cols, label_map)
+    # CRITICAL: scale to [0,1] before PCA so data-points and final_centers
+    # share the same coordinate space. final_centers come from FCM which ran
+    # on MinMax-scaled X — passing raw values here caused PC1=100%, scale=100M+.
+    if X_cols:
+        X_raw = df[X_cols].values.astype(float)
+        X = MinMaxScaler().fit_transform(X_raw)
+    else:
+        X = np.zeros((len(df), 1))
+
+    fig_conv = make_convergence_fig(obj)
+    fig_pca  = make_pca_fig(X, labels, centers, label_map)
+    fig_pie  = make_pie_fig(labels, label_map, n_cl)
+    fig_bar  = make_bar_fig(centers, label_map)
+    fig_heat = make_heatmap_fig(centers, avail_cols, label_map)
 
     return fig_conv, fig_pca, fig_pie, fig_bar, fig_heat
 
@@ -353,7 +394,7 @@ def update_map(results, layer_type, map_style, cluster_filter, df_json):
     )
 
     # Province chart
-    prov_fig = make_province_bar(df, n_cl, label_map)
+    prov_fig  = make_province_bar(df, n_cl, label_map)
     prov_card = html.Div([
         html.Div([
             html.P("📊 DISTRIBUSI CLUSTER PER PROVINSI", style={
@@ -362,12 +403,11 @@ def update_map(results, layer_type, map_style, cluster_filter, df_json):
                 "letterSpacing": "0.18em", "color": NEO["blue"],
                 "borderBottom": f"2px solid {NEO['border']}",
                 "paddingBottom": "8px", "marginBottom": "0",
-            }),
+            }, className="neo-section-title"),
             dcc.Graph(figure=prov_fig,
                       config={"displayModeBar": False},
                       style={"height": "380px"}),
-        ], style={
-            "background": "white",
+        ], className="neo-card", style={
             "border": f"3px solid {NEO['border']}",
             "boxShadow": NEO["shadow"],
             "padding": "20px 22px",
@@ -396,9 +436,8 @@ def update_table(results, cluster_filter, df_json):
     kab_col = results.get("kab_col", "")
     df      = pd.DataFrame(json.loads(df_json))
 
-    # Select display columns
-    prov_col = next((c for c in df.columns if "prov" in c.lower()), None)
-    base_cols = [c for c in [prov_col, kab_col] if c]
+    prov_col   = next((c for c in df.columns if "prov" in c.lower()), None)
+    base_cols  = [c for c in [prov_col, kab_col] if c]
     extra_cols = ["_Cluster", "_Kategori", "_Memb%"]
     mem_cols   = [f"_C{i+1}%" for i in range(n_cl) if f"_C{i+1}%" in df.columns]
     show_cols  = base_cols + extra_cols + mem_cols

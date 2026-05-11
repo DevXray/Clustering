@@ -4,7 +4,7 @@ geo_data.py — Koordinat geografis 514 Kabupaten/Kota Indonesia
 
 COORDS: dict[str, tuple[float, float]] = {
     # ── ACEH ──
-    "Aceh Barat": (-4.0757, 96.2497), "Aceh Barat Daya": (-3.7099, 96.8200),
+    "Aceh Barat": (4.45 , 96.183333), "Aceh Barat Daya": (3.7911, 95.9167),
     "Aceh Besar": (5.5483, 95.6036), "Aceh Jaya": (4.6126, 95.6192),
     "Aceh Selatan": (3.0145, 97.3676), "Aceh Singkil": (2.4793, 97.7989),
     "Aceh Tamiang": (4.1718, 97.8650), "Aceh Tengah": (4.5721, 96.8107),

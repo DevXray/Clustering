@@ -1,5 +1,10 @@
 """
 layout.py — Full Dash page layout, neobrutalism theme, zero sidebar
+Changes:
+  - param inputs replaced with dcc.Slider (SC + FCM parameters)
+  - Epsilon replaced with preset dcc.Dropdown
+  - Dark mode toggle button (clientside, no server round-trip)
+  - CSS classNames on key structural elements for dark mode
 """
 from dash import dcc, html
 import dash_bootstrap_components as dbc
@@ -11,9 +16,12 @@ from constants import NEO, CLUSTER_COLORS
 # ──────────────────────────────────────────────────────────────
 # STYLE HELPERS
 # ──────────────────────────────────────────────────────────────
-def neo_card(children, extra_style=None):
+def neo_card(children, extra_style=None, extra_class=""):
+    """
+    Background is intentionally NOT set inline here —
+    it is handled by the .neo-card CSS class so dark mode can override it.
+    """
     s = {
-        "background": NEO["card"],
         "border": f"3px solid {NEO['border']}",
         "boxShadow": NEO["shadow"],
         "padding": "20px 22px",
@@ -21,7 +29,7 @@ def neo_card(children, extra_style=None):
     }
     if extra_style:
         s.update(extra_style)
-    return html.Div(children, style=s)
+    return html.Div(children, style=s, className=f"neo-card {extra_class}".strip())
 
 
 def section_title(text, color=None):
@@ -36,33 +44,80 @@ def section_title(text, color=None):
         "paddingBottom": "8px",
         "marginBottom": "16px",
         "marginTop": "0",
-    })
+    }, className="neo-section-title")
 
 
-def param_input(label, id_, value, min_, max_, step, unit=""):
+def param_slider(label, id_, value, min_, max_, step, marks):
+    """
+    Neobrutalist slider control.
+    marks: dict  {numeric_value: "display_string"}
+    """
     return html.Div([
-        html.Label(
-            f"{label}" + (f" [{unit}]" if unit else ""),
-            style={
-                "fontSize": "10px", "fontWeight": "700",
-                "letterSpacing": "0.1em", "textTransform": "uppercase",
-                "color": NEO["muted"], "marginBottom": "4px",
-                "display": "block",
-            }),
-        dbc.Input(
-            id=id_, type="number", value=value,
-            min=min_, max=max_, step=step,
-            debounce=True,
+        html.Label(label, style={
+            "fontSize": "10px",
+            "fontWeight": "700",
+            "letterSpacing": "0.1em",
+            "textTransform": "uppercase",
+            "color": NEO["muted"],
+            "marginBottom": "10px",
+            "display": "block",
+            "fontFamily": "DM Mono, monospace",
+        }),
+        dcc.Slider(
+            id=id_,
+            min=min_,
+            max=max_,
+            step=step,
+            value=value,
+            marks={
+                k: {
+                    "label": v,
+                    "style": {
+                        "fontSize": "9px",
+                        "fontFamily": "DM Mono, monospace",
+                        "fontWeight": "600",
+                    },
+                }
+                for k, v in marks.items()
+            },
+            tooltip={"placement": "top", "always_visible": True},
+            className="neo-slider",
+        ),
+    ], style={"marginBottom": "36px"})
+
+
+def eps_dropdown(id_, value):
+    """
+    Dropdown for epsilon (log-scale values don't suit a linear slider).
+    """
+    options = [
+        {"label": "1e-3  — kasar",       "value": 1e-3},
+        {"label": "1e-4",                 "value": 1e-4},
+        {"label": "1e-5  — standar ✓",   "value": 1e-5},
+        {"label": "1e-6  — ketat",        "value": 1e-6},
+        {"label": "1e-7  — sangat ketat", "value": 1e-7},
+    ]
+    return html.Div([
+        html.Label("Toleransi ε", style={
+            "fontSize": "10px",
+            "fontWeight": "700",
+            "letterSpacing": "0.1em",
+            "textTransform": "uppercase",
+            "color": NEO["muted"],
+            "marginBottom": "4px",
+            "display": "block",
+            "fontFamily": "DM Mono, monospace",
+        }),
+        dcc.Dropdown(
+            id=id_,
+            options=options,
+            value=value,
+            clearable=False,
             style={
                 "border": f"3px solid {NEO['border']}",
                 "borderRadius": "0",
                 "fontFamily": "DM Mono, monospace",
-                "fontWeight": "600",
-                "fontSize": "13px",
-                "background": "white",
-                "padding": "6px 10px",
-                "width": "100%",
-                "boxShadow": "none",
+                "fontSize": "12px",
             },
         ),
     ], style={"marginBottom": "12px"})
@@ -75,6 +130,7 @@ def create_header():
     return html.Div([
         dbc.Container([
             dbc.Row([
+                # ── Brand ────────────────────────────────────
                 dbc.Col([
                     html.Div([
                         html.Span("SFCM", style={
@@ -104,30 +160,57 @@ def create_header():
                             "letterSpacing": "0.04em",
                         }
                     ),
-                ], width=8),
+                ], width=7),
+
+                # ── Right: algo badge + dark-mode toggle ─────
                 dbc.Col([
                     html.Div([
-                        html.Div("SC + FCM", style={
-                            "fontFamily": "DM Mono, monospace",
-                            "fontSize": "11px", "fontWeight": "700",
-                            "letterSpacing": "0.12em",
-                            "color": NEO["text"],
-                            "background": NEO["yellow"],
-                            "border": f"3px solid {NEO['border']}",
-                            "padding": "4px 12px",
-                            "display": "inline-block",
-                        }),
-                        html.Div("Subtractive + Fuzzy C-Means", style={
-                            "fontSize": "10px", "color": NEO["muted"],
-                            "marginTop": "4px",
-                            "fontFamily": "DM Mono, monospace",
-                        }),
-                    ], style={"textAlign": "right"}),
-                ], width=4, className="d-flex align-items-center justify-content-end"),
+                        # Algo badge
+                        html.Div([
+                            html.Div("SC + FCM", style={
+                                "fontFamily": "DM Mono, monospace",
+                                "fontSize": "11px", "fontWeight": "700",
+                                "letterSpacing": "0.12em",
+                                "color": NEO["text"],
+                                "background": "rgba(0,0,0,0.12)",
+                                "border": f"3px solid {NEO['border']}",
+                                "padding": "4px 12px",
+                                "display": "inline-block",
+                            }),
+                            html.Div("Subtractive + Fuzzy C-Means", style={
+                                "fontSize": "10px",
+                                "color": NEO["muted"],
+                                "marginTop": "4px",
+                                "fontFamily": "DM Mono, monospace",
+                            }),
+                        ], style={"textAlign": "right", "marginBottom": "12px"}),
+
+                        # Dark mode toggle button
+                        html.Div([
+                            html.Button(
+                                "🌙  DARK",
+                                id="btn-theme",
+                                n_clicks=0,
+                                className="neo-theme-toggle",
+                                style={
+                                    "background": NEO["text"],
+                                    "color": NEO["yellow"],
+                                    "border": f"3px solid {NEO['border']}",
+                                    "boxShadow": NEO["shadow_sm"],
+                                    "fontFamily": "DM Mono, monospace",
+                                    "fontWeight": "700",
+                                    "fontSize": "11px",
+                                    "letterSpacing": "0.12em",
+                                    "padding": "7px 16px",
+                                    "cursor": "pointer",
+                                },
+                            ),
+                        ], style={"textAlign": "right"}),
+                    ]),
+                ], width=5, className="d-flex align-items-center justify-content-end"),
             ], align="center"),
         ], fluid=True),
-    ], style={
-        "background": NEO["yellow"],
+    ], className="neo-header", style={
         "borderBottom": f"4px solid {NEO['border']}",
         "padding": "18px 0",
         "marginBottom": "0",
@@ -142,14 +225,19 @@ def create_controls():
         id="upload-data",
         children=html.Div([
             html.Div("⬆", style={
-                "fontSize": "36px", "lineHeight": "1",
+                "fontSize": "36px",
+                "lineHeight": "1",
                 "marginBottom": "8px",
             }),
             html.Div("Drop CSV atau klik untuk upload",
                      style={"fontWeight": "700", "fontSize": "13px"}),
             html.Div("Format: titik-koma (;), desimal koma",
-                     style={"fontSize": "10px", "color": NEO["muted"],
-                            "marginTop": "4px", "fontFamily": "DM Mono, monospace"}),
+                     style={
+                         "fontSize": "10px",
+                         "color": NEO["muted"],
+                         "marginTop": "4px",
+                         "fontFamily": "DM Mono, monospace",
+                     }),
         ], style={"textAlign": "center", "padding": "30px 10px"}),
         style={
             "border": f"3px dashed {NEO['border']}",
@@ -163,17 +251,77 @@ def create_controls():
 
     file_badge = html.Div(id="file-badge", style={"minHeight": "28px"})
 
-    sc_params = dbc.Row([
-        dbc.Col(param_input("Radius (ra)", "input-ra", 0.45, 0.10, 1.0, 0.05), width=3),
-        dbc.Col(param_input("Squash (rb)", "input-rb", 1.5,  1.1,  2.5, 0.1),  width=3),
-        dbc.Col(param_input("Accept ratio", "input-accept", 0.50, 0.2, 0.8, 0.05), width=3),
-        dbc.Col(param_input("Reject ratio", "input-reject", 0.15, 0.05, 0.4, 0.05), width=3),
-    ], className="g-2")
+    # ── Subtractive Clustering sliders ──────────────────────
+    sc_row1 = dbc.Row([
+        dbc.Col(
+            param_slider(
+                "Radius (ra)",
+                "input-ra",
+                value=0.45, min_=0.10, max_=1.00, step=0.05,
+                marks={0.10: "0.10", 0.30: "0.30",
+                       0.50: "0.50", 0.70: "0.70", 1.00: "1.00"},
+            ),
+            width=6,
+        ),
+        dbc.Col(
+            param_slider(
+                "Squash ratio (rb)",
+                "input-rb",
+                value=1.50, min_=1.10, max_=2.50, step=0.10,
+                marks={1.10: "1.1", 1.50: "1.5", 2.00: "2.0", 2.50: "2.5"},
+            ),
+            width=6,
+        ),
+    ], className="g-4")
 
-    fcm_params = dbc.Row([
-        dbc.Col(param_input("Fuzziness (m)", "input-m", 2.0, 1.2, 4.0, 0.1), width=3),
-        dbc.Col(param_input("Max iterasi",  "input-maxiter", 100, 50, 500, 10), width=3),
-        dbc.Col(param_input("Toleransi ε",  "input-eps", 1e-5, 1e-7, 1e-3, 1e-7), width=3),
+    sc_row2 = dbc.Row([
+        dbc.Col(
+            param_slider(
+                "Accept ratio",
+                "input-accept",
+                value=0.50, min_=0.20, max_=0.80, step=0.05,
+                marks={0.20: "0.20", 0.40: "0.40", 0.60: "0.60", 0.80: "0.80"},
+            ),
+            width=6,
+        ),
+        dbc.Col(
+            param_slider(
+                "Reject ratio",
+                "input-reject",
+                value=0.15, min_=0.05, max_=0.40, step=0.05,
+                marks={0.05: "0.05", 0.15: "0.15", 0.25: "0.25", 0.40: "0.40"},
+            ),
+            width=6,
+        ),
+    ], className="g-4")
+
+    # ── Fuzzy C-Means sliders ────────────────────────────────
+    fcm_row1 = dbc.Row([
+        dbc.Col(
+            param_slider(
+                "Fuzziness (m)",
+                "input-m",
+                value=2.0, min_=1.2, max_=4.0, step=0.1,
+                marks={1.2: "1.2", 2.0: "2.0", 3.0: "3.0", 4.0: "4.0"},
+            ),
+            width=6,
+        ),
+        dbc.Col(
+            param_slider(
+                "Max iterasi",
+                "input-maxiter",
+                value=100, min_=50, max_=500, step=10,
+                marks={50: "50", 100: "100", 200: "200", 300: "300", 500: "500"},
+            ),
+            width=6,
+        ),
+    ], className="g-4")
+
+    fcm_row2 = dbc.Row([
+        dbc.Col(
+            eps_dropdown("input-eps", 1e-5),
+            width=6,
+        ),
         dbc.Col([
             html.Div(style={"height": "28px"}),
             html.Button(
@@ -196,58 +344,34 @@ def create_controls():
                 n_clicks=0,
                 className="neo-run-btn",
             ),
-        ], width=3),
-    ], className="g-2")
+        ], width=6),
+    ], className="g-4", style={"alignItems": "flex-end"})
 
     return dbc.Container([
         neo_card([
             dbc.Row([
+                # ── Upload ──────────────────────────────────
                 dbc.Col([
                     section_title("📂 Data Input"),
                     upload_zone,
                     file_badge,
                 ], width=4),
+
+                # ── Parameters ──────────────────────────────
                 dbc.Col([
                     section_title("⚙ Subtractive Clustering"),
-                    sc_params,
-                    html.Div(style={"height": "12px"}),
+                    sc_row1,
+                    sc_row2,
+
+                    html.Div(style={"height": "8px"}),
                     section_title("⚙ Fuzzy C-Means"),
-                    fcm_params,
+                    fcm_row1,
+                    fcm_row2,
                 ], width=8),
             ], className="g-3"),
         ]),
         html.Div(id="alert-box"),
     ], fluid=True)
-
-
-# ──────────────────────────────────────────────────────────────
-# METRICS ROW
-# ──────────────────────────────────────────────────────────────
-def metric_card(value, label, accent=None):
-    return html.Div([
-        html.Div(str(value), style={
-            "fontFamily": "DM Mono, monospace",
-            "fontSize": "28px",
-            "fontWeight": "900",
-            "color": accent or NEO["blue"],
-            "lineHeight": "1",
-        }),
-        html.Div(label, style={
-            "fontFamily": "DM Mono, monospace",
-            "fontSize": "9px",
-            "fontWeight": "700",
-            "letterSpacing": "0.14em",
-            "textTransform": "uppercase",
-            "color": NEO["muted"],
-            "marginTop": "5px",
-        }),
-    ], style={
-        "background": "white",
-        "border": f"3px solid {NEO['border']}",
-        "boxShadow": NEO["shadow_sm"],
-        "padding": "14px 18px",
-        "textAlign": "center",
-    })
 
 
 # ──────────────────────────────────────────────────────────────
@@ -267,8 +391,10 @@ def create_results_section():
             neo_card([
                 section_title("📈 Konvergensi & Sebaran Cluster"),
                 dbc.Row([
-                    dbc.Col(dcc.Graph(id="chart-convergence", config={"displayModeBar": False}), width=6),
-                    dbc.Col(dcc.Graph(id="chart-pca",         config={"displayModeBar": False}), width=6),
+                    dbc.Col(dcc.Graph(id="chart-convergence",
+                                     config={"displayModeBar": False}), width=6),
+                    dbc.Col(dcc.Graph(id="chart-pca",
+                                     config={"displayModeBar": False}), width=6),
                 ], className="g-3"),
             ]),
 
@@ -276,8 +402,10 @@ def create_results_section():
             neo_card([
                 section_title("📊 Distribusi & Profil Indikator"),
                 dbc.Row([
-                    dbc.Col(dcc.Graph(id="chart-pie",  config={"displayModeBar": False}), width=5),
-                    dbc.Col(dcc.Graph(id="chart-bar",  config={"displayModeBar": False}), width=7),
+                    dbc.Col(dcc.Graph(id="chart-pie",
+                                     config={"displayModeBar": False}), width=5),
+                    dbc.Col(dcc.Graph(id="chart-bar",
+                                     config={"displayModeBar": False}), width=7),
                 ], className="g-3"),
             ]),
 
@@ -323,43 +451,41 @@ def create_map_section():
     return html.Div([
         dbc.Container([
             neo_card([
-                section_title("🗺 PETA SEBARAN CLUSTER KEMISKINAN INDONESIA", NEO["red"]),
+                section_title("🗺 PETA SEBARAN CLUSTER KEMISKINAN INDONESIA",
+                              NEO["red"]),
 
                 # Map controls row
                 dbc.Row([
                     dbc.Col([
                         ctrl_label("Layer Type"),
-                        dcc.Dropdown(
-                            id="map-layer", options=layer_opts,
-                            value="scatter", clearable=False,
-                            style=dropdown_style,
-                        ),
+                        dcc.Dropdown(id="map-layer", options=layer_opts,
+                                     value="scatter", clearable=False,
+                                     style=dropdown_style),
                     ], width=3),
                     dbc.Col([
                         ctrl_label("Basemap Style"),
-                        dcc.Dropdown(
-                            id="map-style", options=style_opts,
-                            value="open-street-map", clearable=False,
-                            style=dropdown_style,
-                        ),
+                        dcc.Dropdown(id="map-style", options=style_opts,
+                                     value="open-street-map", clearable=False,
+                                     style=dropdown_style),
                     ], width=3),
                     dbc.Col([
                         ctrl_label("Filter Cluster"),
-                        dcc.Dropdown(
-                            id="map-cluster-filter",
-                            options=[], value=[], multi=True,
-                            placeholder="Semua cluster...",
-                            style=dropdown_style,
-                        ),
+                        dcc.Dropdown(id="map-cluster-filter",
+                                     options=[], value=[], multi=True,
+                                     placeholder="Semua cluster...",
+                                     style=dropdown_style),
                     ], width=6),
                 ], className="g-3", style={"marginBottom": "16px"}),
 
-                # Map container with thick border
+                # Map
                 html.Div(
                     dcc.Graph(
                         id="chart-map",
-                        config={"scrollZoom": True, "displayModeBar": True,
-                                "modeBarButtonsToRemove": ["select2d", "lasso2d"]},
+                        config={
+                            "scrollZoom": True,
+                            "displayModeBar": True,
+                            "modeBarButtonsToRemove": ["select2d", "lasso2d"],
+                        },
                         style={"height": "520px"},
                     ),
                     style={
@@ -369,11 +495,9 @@ def create_map_section():
                     },
                 ),
 
-                # Map stats bar
                 html.Div(id="map-stats-bar", style={"marginTop": "12px"}),
             ]),
 
-            # Province breakdown chart
             html.Div(id="province-chart-container"),
 
         ], fluid=True),
@@ -481,32 +605,7 @@ def create_table_section():
 
 
 # ──────────────────────────────────────────────────────────────
-# SPINNER / LOADING OVERLAY
-# ──────────────────────────────────────────────────────────────
-def create_loading_overlay():
-    return html.Div([
-        html.Div([
-            html.Div("⟳", style={
-                "fontSize": "48px", "animation": "spin 1s linear infinite",
-                "display": "block", "textAlign": "center",
-            }),
-            html.Div("MENJALANKAN SFCM...", style={
-                "fontFamily": "DM Mono, monospace",
-                "fontWeight": "900", "letterSpacing": "0.15em",
-                "fontSize": "14px", "marginTop": "12px",
-            }),
-        ], style={
-            "background": NEO["yellow"],
-            "border": f"4px solid {NEO['border']}",
-            "boxShadow": NEO["shadow_lg"],
-            "padding": "32px 48px",
-            "textAlign": "center",
-        }),
-    ], id="loading-overlay", style={"display": "none"})
-
-
-# ──────────────────────────────────────────────────────────────
-# STORES & FOOTER
+# STORES
 # ──────────────────────────────────────────────────────────────
 def create_stores():
     return html.Div([
@@ -515,6 +614,9 @@ def create_stores():
     ])
 
 
+# ──────────────────────────────────────────────────────────────
+# FOOTER
+# ──────────────────────────────────────────────────────────────
 def create_footer():
     return html.Div([
         html.Div(
@@ -527,11 +629,10 @@ def create_footer():
                 "padding": "24px",
                 "borderTop": f"3px solid {NEO['border']}",
                 "marginTop": "40px",
-                "background": NEO["yellow"],
                 "letterSpacing": "0.1em",
             }
         ),
-    ])
+    ], className="neo-footer")
 
 
 # ──────────────────────────────────────────────────────────────
@@ -555,8 +656,9 @@ def create_layout():
         create_map_section(),
         create_table_section(),
         create_footer(),
-    ], style={
-        "background": NEO["bg"],
+
+    ], id="main-app", style={
+        "background": "#F5F0E8",    # light mode default; dark mode handled by CSS
         "minHeight": "100vh",
         "fontFamily": "DM Mono, monospace",
     })

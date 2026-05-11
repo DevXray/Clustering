@@ -1,20 +1,52 @@
 /* =====================================================
-   SFCM DASHBOARD — Neobrutalism Theme
+   SFCM DASHBOARD — Neobrutalism Theme (Light + Dark)
    assets/style.css  (auto-loaded by Dash)
    ===================================================== */
 
 /* ── Google Fonts fallback ── */
 @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@700;900&display=swap');
 
-/* ── Reset & Base ── */
+/* ── Reset ── */
 *, *::before, *::after { box-sizing: border-box; }
 
+/* ─────────────────────────────────────────────────────────────
+   BASE / LIGHT MODE
+   ───────────────────────────────────────────────────────────── */
 body {
   background: #F5F0E8;
   font-family: 'DM Mono', 'JetBrains Mono', 'Courier New', monospace;
   color: #0D0D0D;
   margin: 0;
   padding: 0;
+  transition: background 0.28s ease, color 0.28s ease;
+}
+
+/* ── Structural classes (backgrounds managed here, not inline) ── */
+.neo-header {
+  background: #FFE500;
+  transition: background 0.28s ease, border-color 0.28s ease;
+}
+
+.neo-footer {
+  background: #FFE500;
+  transition: background 0.28s ease, border-color 0.28s ease;
+}
+
+.neo-card {
+  background: #FFFFFF;
+  transition: background 0.28s ease, border-color 0.28s ease, box-shadow 0.28s ease;
+}
+
+/* Dynamic cards created in callbacks.py */
+.neo-metric-card {
+  background: #FFFFFF;
+  transition: background 0.28s ease, border-color 0.28s ease;
+}
+
+.neo-cluster-card {
+  background: #FFFFFF;
+  overflow: hidden;
+  transition: background 0.28s ease, border-color 0.28s ease;
 }
 
 /* ── Run button press animation ── */
@@ -27,10 +59,113 @@ body {
   box-shadow: 2px 2px 0 #0D0D0D !important;
 }
 
+/* ── Theme toggle button ── */
+.neo-theme-toggle {
+  transition: background 0.2s ease, color 0.2s ease, box-shadow 0.1s ease, transform 0.1s ease;
+}
+.neo-theme-toggle:hover {
+  transform: translate(-2px, -2px) !important;
+  box-shadow: 5px 5px 0 rgba(0, 0, 0, 0.35) !important;
+}
+.neo-theme-toggle:active {
+  transform: translate(2px, 2px) !important;
+  box-shadow: 1px 1px 0 rgba(0, 0, 0, 0.35) !important;
+}
+
 /* ── Bootstrap override: remove card radius ── */
 .card { border-radius: 0 !important; }
 
-/* ── Dash number input ── */
+/* ─────────────────────────────────────────────────────────────
+   SLIDERS  (dcc.Slider — uses rc-slider internally)
+   ───────────────────────────────────────────────────────────── */
+
+/* Outer wrapper padding so tooltip doesn't clip */
+.neo-slider {
+  padding: 6px 2px 20px 2px !important;
+}
+
+/* Rail (grey background track) */
+.neo-slider .rc-slider-rail {
+  background-color: #E2DDD4 !important;
+  height: 4px !important;
+  border-radius: 0 !important;
+  transition: background-color 0.28s ease;
+}
+
+/* Track (filled blue portion) */
+.neo-slider .rc-slider-track {
+  background-color: #0044FF !important;
+  height: 4px !important;
+  border-radius: 0 !important;
+  transition: background-color 0.28s ease;
+}
+
+/* Handle — square, hard-shadow neobrutalist */
+.neo-slider .rc-slider-handle {
+  background-color: #0044FF !important;
+  border: 3px solid #0D0D0D !important;
+  width: 18px !important;
+  height: 18px !important;
+  margin-top: -7px !important;
+  border-radius: 0 !important;                 /* square handle */
+  box-shadow: 2px 2px 0 #0D0D0D !important;
+  opacity: 1 !important;
+  transition: background-color 0.18s, border-color 0.18s, box-shadow 0.1s, transform 0.1s !important;
+}
+
+.neo-slider .rc-slider-handle:hover {
+  border-color: #0044FF !important;
+  box-shadow: 3px 3px 0 #0D0D0D !important;
+  transform: translate(-1px, -1px) !important;
+}
+
+.neo-slider .rc-slider-handle:active,
+.neo-slider .rc-slider-handle-dragging.rc-slider-handle-dragging.rc-slider-handle-dragging {
+  border-color: #0044FF !important;
+  box-shadow: 4px 4px 0 #0044FF !important;
+  transform: translate(-1px, -1px) !important;
+  cursor: grabbing !important;
+}
+
+/* Mark labels */
+.neo-slider .rc-slider-mark-text {
+  font-family: 'DM Mono', monospace !important;
+  font-size: 9px !important;
+  font-weight: 600 !important;
+  color: #8A8680 !important;
+  transition: color 0.28s ease;
+}
+
+.neo-slider .rc-slider-mark-text-active {
+  color: #0044FF !important;
+}
+
+/* Tooltip bubble */
+.rc-slider-tooltip-inner {
+  background-color: #0D0D0D !important;
+  border-radius: 0 !important;
+  font-family: 'DM Mono', monospace !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  padding: 3px 8px !important;
+  min-width: 36px !important;
+  text-align: center !important;
+  box-shadow: 2px 2px 0 #0044FF !important;
+  color: #FFE500 !important;
+  transition: background-color 0.28s ease, box-shadow 0.28s ease;
+}
+
+.rc-slider-tooltip-arrow {
+  border-top-color: #0D0D0D !important;
+}
+
+.rc-slider-tooltip {
+  z-index: 9999 !important;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   FORM ELEMENTS
+   ───────────────────────────────────────────────────────────── */
 input[type="number"] {
   border: 3px solid #0D0D0D !important;
   border-radius: 0 !important;
@@ -41,20 +176,18 @@ input[type="number"] {
   color: #0D0D0D;
   background: #FFFFFF;
   padding: 6px 10px;
-  transition: border-color 0.12s, box-shadow 0.12s;
+  transition: border-color 0.12s, box-shadow 0.12s, background 0.28s, color 0.28s;
 }
 input[type="number"]:focus {
   border-color: #0044FF !important;
   box-shadow: 3px 3px 0 #0044FF !important;
 }
-/* Hide browser spinners */
 input[type="number"]::-webkit-outer-spin-button,
 input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
 input[type="number"] { -moz-appearance: textfield; }
 
-/* ── Upload zone hover ── */
-.dcc-upload:hover,
-div[data-dash-is-loading="true"] + div {
+/* Upload zone hover */
+.dcc-upload:hover {
   background: rgba(255, 229, 0, 0.12) !important;
 }
 
@@ -66,22 +199,26 @@ div[data-dash-is-loading="true"] + div {
   box-shadow: none !important;
   font-family: 'DM Mono', monospace !important;
   font-size: 12px !important;
+  transition: background 0.28s ease, border-color 0.18s;
 }
 .Select-control:hover  { border-color: #0044FF !important; }
-.Select.is-focused > .Select-control { border-color: #0044FF !important; box-shadow: 3px 3px 0 #0044FF !important; }
+.Select.is-focused > .Select-control {
+  border-color: #0044FF !important;
+  box-shadow: 3px 3px 0 #0044FF !important;
+}
 .Select-menu-outer {
   border: 3px solid #0D0D0D !important;
   border-radius: 0 !important;
   box-shadow: 4px 4px 0 #0D0D0D !important;
   font-family: 'DM Mono', monospace !important;
   font-size: 12px !important;
+  background: white !important;
+  transition: background 0.28s ease;
 }
-.Select-option.is-focused { background: #FFE500 !important; color: #0D0D0D !important; }
+.Select-option.is-focused  { background: #FFE500 !important; color: #0D0D0D !important; }
 .Select-option.is-selected { background: #0044FF !important; color: white !important; }
 .Select-value-label { font-family: 'DM Mono', monospace !important; font-weight: 600 !important; }
 .VirtualizedSelectOption { font-family: 'DM Mono', monospace !important; }
-
-/* Dash 2.x Select style */
 .dash-dropdown .Select-control { border: 3px solid #0D0D0D !important; border-radius: 0 !important; }
 
 /* ── DataTable ── */
@@ -89,6 +226,7 @@ div[data-dash-is-loading="true"] + div {
   border: 3px solid #0D0D0D !important;
   border-radius: 0 !important;
   font-family: 'DM Mono', monospace !important;
+  transition: border-color 0.28s ease;
 }
 .dash-spreadsheet-container th,
 .dash-spreadsheet-container .dash-header {
@@ -105,11 +243,11 @@ div[data-dash-is-loading="true"] + div {
   font-family: 'DM Mono', monospace !important;
   font-size: 11px !important;
   border: 1px solid #E2DDD4 !important;
+  transition: background 0.28s, color 0.28s, border-color 0.28s;
 }
 .dash-spreadsheet-container .dash-cell:hover {
   background: rgba(0, 68, 255, 0.05) !important;
 }
-/* Filter row */
 .dash-spreadsheet-container input.dash-filter {
   border: 2px solid #0D0D0D !important;
   border-radius: 0 !important;
@@ -117,8 +255,6 @@ div[data-dash-is-loading="true"] + div {
   font-size: 11px !important;
   background: #FAFAF5 !important;
 }
-
-/* Pagination */
 .previous-next-container button,
 .page-number {
   border: 2px solid #0D0D0D !important;
@@ -127,6 +263,7 @@ div[data-dash-is-loading="true"] + div {
   font-weight: 700 !important;
   background: white !important;
   box-shadow: 2px 2px 0 #0D0D0D !important;
+  transition: background 0.28s;
 }
 .previous-next-container button:hover,
 .page-number:hover {
@@ -135,12 +272,8 @@ div[data-dash-is-loading="true"] + div {
   box-shadow: 3px 3px 0 #0D0D0D !important;
 }
 
-/* ── Plotly chart: remove default border inside Graph ── */
-.js-plotly-plot .plotly .main-svg {
-  border: none !important;
-}
-
-/* ── Map container focus ring ── */
+/* ── Plotly ── */
+.js-plotly-plot .plotly .main-svg { border: none !important; }
 .js-plotly-plot:focus-within {
   outline: 3px solid #0044FF;
   outline-offset: 2px;
@@ -148,11 +281,11 @@ div[data-dash-is-loading="true"] + div {
 
 /* ── Scrollbar ── */
 ::-webkit-scrollbar { width: 8px; height: 8px; }
-::-webkit-scrollbar-track { background: #F5F0E8; border: 1px solid #C8C2B8; }
-::-webkit-scrollbar-thumb { background: #0D0D0D; }
+::-webkit-scrollbar-track { background: #F5F0E8; border: 1px solid #C8C2B8; transition: background 0.28s; }
+::-webkit-scrollbar-thumb { background: #0D0D0D; transition: background 0.28s; }
 ::-webkit-scrollbar-thumb:hover { background: #0044FF; }
 
-/* ── Loading spinner text ── */
+/* ── Loading ── */
 ._dash-loading-callback {
   font-family: 'DM Mono', monospace !important;
   color: #FF3500 !important;
@@ -160,7 +293,7 @@ div[data-dash-is-loading="true"] + div {
   letter-spacing: 0.12em !important;
 }
 
-/* ── Tooltip / Hover ── */
+/* ── Hover tooltip ── */
 .hoverlayer .hovertext {
   font-family: 'DM Mono', monospace !important;
   font-size: 11px !important;
@@ -176,4 +309,214 @@ div[data-dash-is-loading="true"] + div {
 @media (max-width: 768px) {
   body { font-size: 12px; }
   .neo-run-btn { font-size: 11px !important; }
+}
+
+
+/* ═════════════════════════════════════════════════════════════
+   DARK MODE
+   Activated by toggling `dark-mode` class on <body>.
+   ═════════════════════════════════════════════════════════════ */
+
+/* -- Palette reference (not functional CSS vars, just comments)
+   bg:      #0C0C14  near-black with blue undertone
+   card:    #16161F  slightly lighter
+   border:  #252534  subtle dark border
+   text:    #EDEAF5  light lavender-white
+   muted:   #7A7A8C  medium-contrast label
+   primary: #6366F1  indigo accent (from design system image)
+   green:   #A3E635  lime accent (from design system image)
+   ---------------------------------------------------------- */
+
+body.dark-mode {
+  background: #0C0C14 !important;
+  color: #EDEAF5 !important;
+}
+
+/* Main app wrapper */
+body.dark-mode #main-app {
+  background: #0C0C14 !important;
+}
+
+/* ── Header / Footer ── */
+body.dark-mode .neo-header {
+  background: #16161F !important;
+  border-bottom-color: #252534 !important;
+}
+
+body.dark-mode .neo-footer {
+  background: #16161F !important;
+  border-top-color: #252534 !important;
+}
+
+/* ── Cards ── */
+body.dark-mode .neo-card {
+  background: #16161F !important;
+  border-color: #252534 !important;
+  box-shadow: 6px 6px 0px #252534 !important;
+}
+
+body.dark-mode .neo-metric-card {
+  background: #16161F !important;
+  border-color: #252534 !important;
+  box-shadow: 3px 3px 0px #252534 !important;
+}
+
+body.dark-mode .neo-cluster-card {
+  background: #16161F !important;
+  border-color: #252534 !important;
+  box-shadow: 3px 3px 0px #252534 !important;
+}
+
+/* Color override for muted text — only .neo-card label/span/p so accent colors survive */
+body.dark-mode .neo-card label {
+  color: #7A7A8C !important;
+}
+
+body.dark-mode .neo-card .neo-section-title {
+  color: #818CF8 !important;          /* lighter indigo in dark mode */
+  border-bottom-color: #252534 !important;
+}
+
+/* ── Inputs ── */
+body.dark-mode input[type="number"] {
+  background: #16161F !important;
+  color: #EDEAF5 !important;
+  border-color: #252534 !important;
+}
+body.dark-mode input[type="number"]:focus {
+  border-color: #6366F1 !important;
+  box-shadow: 3px 3px 0 #6366F1 !important;
+}
+
+/* ── Upload zone ── */
+body.dark-mode #upload-data > div {
+  background: #16161F !important;
+  border-color: #252534 !important;
+  color: #EDEAF5 !important;
+}
+
+/* ── Dropdowns ── */
+body.dark-mode .Select-control {
+  background: #16161F !important;
+  border-color: #252534 !important;
+}
+body.dark-mode .Select-value-label,
+body.dark-mode .Select-placeholder {
+  color: #EDEAF5 !important;
+}
+body.dark-mode .Select-arrow { border-top-color: #EDEAF5 !important; }
+body.dark-mode .Select-input > input { color: #EDEAF5 !important; background: transparent !important; }
+body.dark-mode .Select-menu-outer {
+  background: #16161F !important;
+  border-color: #252534 !important;
+  box-shadow: 4px 4px 0 #252534 !important;
+}
+body.dark-mode .Select-option {
+  background: #16161F !important;
+  color: #EDEAF5 !important;
+}
+body.dark-mode .Select-option.is-focused {
+  background: #252534 !important;
+  color: #A3E635 !important;              /* lime accent on hover */
+}
+body.dark-mode .Select-option.is-selected {
+  background: #6366F1 !important;
+  color: #FFFFFF !important;
+}
+
+/* ── Sliders in dark mode ── */
+body.dark-mode .neo-slider .rc-slider-rail {
+  background-color: #252534 !important;
+}
+body.dark-mode .neo-slider .rc-slider-track {
+  background-color: #6366F1 !important; /* indigo */
+}
+body.dark-mode .neo-slider .rc-slider-handle {
+  background-color: #6366F1 !important;
+  border-color: #EDEAF5 !important;
+  box-shadow: 2px 2px 0 #252534 !important;
+}
+body.dark-mode .neo-slider .rc-slider-handle:hover {
+  box-shadow: 3px 3px 0 #6366F1 !important;
+}
+body.dark-mode .neo-slider .rc-slider-handle:active,
+body.dark-mode .neo-slider .rc-slider-handle-dragging.rc-slider-handle-dragging.rc-slider-handle-dragging {
+  border-color: #A3E635 !important;
+  box-shadow: 4px 4px 0 #A3E635 !important;
+}
+body.dark-mode .neo-slider .rc-slider-mark-text {
+  color: #4A4A5C !important;
+}
+body.dark-mode .neo-slider .rc-slider-mark-text-active {
+  color: #A5B4FC !important;
+}
+body.dark-mode .rc-slider-tooltip-inner {
+  background-color: #16161F !important;
+  box-shadow: 2px 2px 0 #6366F1 !important;
+  color: #A3E635 !important;
+}
+body.dark-mode .rc-slider-tooltip-arrow {
+  border-top-color: #16161F !important;
+}
+
+/* ── DataTable ── */
+body.dark-mode .dash-spreadsheet-container {
+  border-color: #252534 !important;
+}
+body.dark-mode .dash-spreadsheet-container td {
+  background: #16161F !important;
+  color: #EDEAF5 !important;
+  border-color: #252534 !important;
+}
+body.dark-mode .dash-spreadsheet-container input.dash-filter {
+  background: #1E1E2A !important;
+  color: #EDEAF5 !important;
+  border-color: #252534 !important;
+}
+body.dark-mode .previous-next-container button,
+body.dark-mode .page-number {
+  background: #16161F !important;
+  color: #EDEAF5 !important;
+  border-color: #252534 !important;
+  box-shadow: 2px 2px 0 #252534 !important;
+}
+body.dark-mode .previous-next-container button:hover,
+body.dark-mode .page-number:hover {
+  background: #252534 !important;
+  color: #A3E635 !important;
+}
+
+/* ── Scrollbar dark ── */
+body.dark-mode ::-webkit-scrollbar-track { background: #0C0C14; border-color: #252534; }
+body.dark-mode ::-webkit-scrollbar-thumb { background: #252534; }
+body.dark-mode ::-webkit-scrollbar-thumb:hover { background: #6366F1; }
+
+/* ── Map stats bar dark ── */
+body.dark-mode #map-stats-bar > div { color: #7A7A8C !important; }
+
+/* ── Cluster/results section background ── */
+body.dark-mode #results-section,
+body.dark-mode #map-section,
+body.dark-mode #table-section {
+  background: #0C0C14;
+}
+
+/* ── Map container border ── */
+body.dark-mode #chart-map {
+  border-color: #252534 !important;
+}
+
+/* ── Section title in dark when it's a standalone P tag with no className ──
+   Covers section_title() outputs; we rely on neo-section-title className now   */
+body.dark-mode .neo-card p[style*="color: rgb(0, 68, 255)"],
+body.dark-mode .neo-card p[style*="color: rgb(255, 53, 0)"] {
+  opacity: 0.85;
+}
+
+/* ── Run button slightly different dark style ── */
+body.dark-mode .neo-run-btn {
+  box-shadow: 6px 6px 0 #252534 !important;
+}
+body.dark-mode .neo-run-btn:hover {
+  box-shadow: 8px 8px 0 #6366F1 !important;
 }
